@@ -1,0 +1,77 @@
+-- LocalScript trong StarterGui
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+-- Tạo ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+
+-- Khung chính
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 80)
+frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.BackgroundTransparency = 0.1
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+
+-- Bo tròn
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 15)
+corner.Parent = frame
+
+-- Nút tắt
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 25, 0, 25)
+closeBtn.Position = UDim2.new(1, -30, 0, 5)
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+closeBtn.Parent = frame
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 8)
+btnCorner.Parent = closeBtn
+
+-- Nhãn tọa độ
+local coordLabel = Instance.new("TextButton")
+coordLabel.Size = UDim2.new(1, -10, 0, 40)
+coordLabel.Position = UDim2.new(0, 5, 0, 30)
+coordLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+coordLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+coordLabel.TextSize = 16
+coordLabel.Text = "X: 0, Y: 0, Z: 0"
+coordLabel.Parent = frame
+
+local labelCorner = Instance.new("UICorner")
+labelCorner.CornerRadius = UDim.new(0, 10)
+labelCorner.Parent = coordLabel
+
+-- Cập nhật tọa độ
+task.spawn(function()
+	while task.wait(0.2) do
+		if hrp and hrp.Parent then
+			local pos = hrp.Position
+			coordLabel.Text = string.format("X: %.1f, Y: %.1f, Z: %.1f", pos.X, pos.Y, pos.Z)
+		end
+	end
+end)
+
+-- Copy khi bấm vào khung
+coordLabel.MouseButton1Click:Connect(function()
+	if hrp then
+		local pos = hrp.Position
+		setclipboard(string.format("%d, %d, %d", pos.X, pos.Y, pos.Z))
+	end
+end)
+
+-- Đóng khung
+closeBtn.MouseButton1Click:Connect(function()
+	frame.Visible = false
+end)
