@@ -1,0 +1,177 @@
+-- LocalScript | StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+-- ===== BIẾN =====
+local savedCFrame = nil
+local RESPAWN_WAIT = 4
+local MID_CFRAME = CFrame.new(-1110, 337, 4)
+
+local autoTP = false
+local shouldTeleport = false
+
+-- ===== GUI =====
+local gui = Instance.new("ScreenGui")
+gui.Name = "HoTroMastryGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Khung chính
+local main = Instance.new("Frame")
+main.Size = UDim2.fromScale(0.35, 0.35)
+main.Position = UDim2.fromScale(0.325, 0.325)
+main.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+main.Parent = gui
+
+local cornerMain = Instance.new("UICorner", main)
+cornerMain.CornerRadius = UDim.new(0, 22)
+
+-- Viền đỏ sáng
+local border = Instance.new("UIStroke", main)
+border.Thickness = 3
+border.Color = Color3.fromRGB(255, 60, 60)
+
+local borderGrad = Instance.new("UIGradient", border)
+borderGrad.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,120,120)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,40,40)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(180,0,0))
+}
+
+-- Thanh trên
+local top = Instance.new("Frame")
+top.Size = UDim2.fromScale(1, 0.2)
+top.BackgroundColor3 = Color3.fromRGB(90, 0, 140)
+top.BorderSizePixel = 0
+top.Parent = main
+Instance.new("UICorner", top).CornerRadius = UDim.new(0, 22)
+
+-- Tiêu đề
+local title = Instance.new("TextLabel")
+title.Size = UDim2.fromScale(0.65, 0.7)
+title.Position = UDim2.fromScale(0.05, 0.15)
+title.BackgroundTransparency = 1
+title.Text = "HỖ TRỢ MASTRY"
+title.TextScaled = true
+title.Font = Enum.Font.GothamBlack
+title.TextColor3 = Color3.fromRGB(255,230,230)
+title.Parent = top
+
+local titleStroke = Instance.new("UIStroke", title)
+titleStroke.Color = Color3.fromRGB(255,80,80)
+titleStroke.Thickness = 1.5
+
+-- Nút X
+local close = Instance.new("TextButton")
+close.Size = UDim2.fromScale(0.18, 0.7)
+close.Position = UDim2.fromScale(0.8, 0.15)
+close.Text = "X"
+close.TextScaled = true
+close.Font = Enum.Font.GothamBold
+close.BackgroundColor3 = Color3.fromRGB(30,30,30)
+close.TextColor3 = Color3.new(1,1,1)
+close.Parent = top
+Instance.new("UICorner", close)
+
+close.MouseButton1Click:Connect(function()
+	autoTP = false
+	shouldTeleport = false
+	gui.Enabled = false
+end)
+
+-- ===== KHUNG VỊ TRÍ =====
+local posFrame = Instance.new("Frame")
+posFrame.Size = UDim2.fromScale(0.9, 0.3)
+posFrame.Position = UDim2.fromScale(0.05, 0.25)
+posFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+posFrame.BorderSizePixel = 0
+posFrame.Parent = main
+Instance.new("UICorner", posFrame)
+
+local posText = Instance.new("TextLabel")
+posText.Size = UDim2.fromScale(1,1)
+posText.BackgroundTransparency = 1
+posText.TextScaled = true
+posText.TextWrapped = true
+posText.Font = Enum.Font.Gotham
+posText.TextColor3 = Color3.new(1,1,1)
+posText.Parent = posFrame
+
+RunService.RenderStepped:Connect(function()
+	local char = player.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		local p = char.HumanoidRootPart.Position
+		posText.Text = string.format("X: %.0f\nY: %.0f\nZ: %.0f", p.X, p.Y, p.Z)
+	end
+end)
+
+-- ===== NÚT LƯU =====
+local saveBtn = Instance.new("TextButton")
+saveBtn.Size = UDim2.fromScale(0.9, 0.15)
+saveBtn.Position = UDim2.fromScale(0.05, 0.6)
+saveBtn.Text = "LƯU VỊ TRÍ"
+saveBtn.TextScaled = true
+saveBtn.Font = Enum.Font.GothamBold
+saveBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+saveBtn.TextColor3 = Color3.new(1,1,1)
+saveBtn.Parent = main
+Instance.new("UICorner", saveBtn)
+
+saveBtn.MouseButton1Click:Connect(function()
+	local char = player.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		savedCFrame = char.HumanoidRootPart.CFrame
+		saveBtn.Text = "ĐÃ LƯU"
+	end
+end)
+
+-- ===== NÚT START =====
+local startBtn = Instance.new("TextButton")
+startBtn.Size = UDim2.fromScale(0.45, 0.15)
+startBtn.Position = UDim2.fromScale(0.05, 0.78)
+startBtn.Text = "START"
+startBtn.TextScaled = true
+startBtn.Font = Enum.Font.GothamBold
+startBtn.BackgroundColor3 = Color3.fromRGB(40,160,80)
+startBtn.TextColor3 = Color3.new(1,1,1)
+startBtn.Parent = main
+Instance.new("UICorner", startBtn)
+
+startBtn.MouseButton1Click:Connect(function()
+	if not savedCFrame then
+		startBtn.Text = "CHƯA LƯU"
+		return
+	end
+	autoTP = true
+	startBtn.Text = "ĐANG CHẠY"
+end)
+
+-- ===== LOGIC CHẾT / SPAWN =====
+local function onCharacter(char)
+	local hum = char:WaitForChild("Humanoid")
+	hum.Died:Connect(function()
+		if not autoTP or not savedCFrame then return end
+		shouldTeleport = true
+		task.wait(RESPAWN_WAIT)
+	end)
+end
+
+player.CharacterAdded:Connect(function(char)
+	if shouldTeleport and autoTP and savedCFrame then
+		local hrp = char:WaitForChild("HumanoidRootPart")
+		hrp.CFrame = MID_CFRAME
+		task.wait(1)
+		hrp.CFrame = savedCFrame
+		shouldTeleport = false
+	end
+	onCharacter(char)
+end)
+
+if player.Character then
+	onCharacter(player.Character)
+end
