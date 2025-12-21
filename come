@@ -1,0 +1,12 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local backpack = player:WaitForChild("Backpack")
+local defaultFolder = backpack:WaitForChild("Default")
+
+for _, obj in ipairs(defaultFolder:GetChildren()) do
+	if obj:IsA("BasePart") then
+		obj.Size = Vector3.new(20, 20, 20)
+		obj.Transparency = 0.7
+	end
+end
