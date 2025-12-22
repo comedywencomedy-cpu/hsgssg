@@ -1,0 +1,141 @@
+--// Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+--// Variables
+local savedCFrame = nil
+local running = false
+local tpThread = nil
+local guiClosed = false
+
+--// Get HRP safely
+local function getHRP()
+    local char = player.Character or player.CharacterAdded:Wait()
+    return char:WaitForChild("HumanoidRootPart")
+end
+
+--// GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "Mastry2GUI"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 260, 0, 150)
+main.Position = UDim2.new(0.5, -130, 0.45, 0)
+main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+main.Active = true
+main.Draggable = true
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 16)
+
+local stroke = Instance.new("UIStroke", main)
+stroke.Color = Color3.fromRGB(220, 40, 40)
+stroke.Thickness = 3
+
+-- Title bar
+local title = Instance.new("Frame", main)
+title.Size = UDim2.new(1, -10, 0, 30)
+title.Position = UDim2.new(0, 5, 0, 5)
+title.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
+Instance.new("UICorner", title).CornerRadius = UDim.new(0, 12)
+
+local titleText = Instance.new("TextLabel", title)
+titleText.Size = UDim2.new(1, -40, 1, 0)
+titleText.Text = "HỖ TRỢ MASTRY2"
+titleText.Font = Enum.Font.GothamBold
+titleText.TextScaled = true
+titleText.TextColor3 = Color3.new(1,1,1)
+titleText.BackgroundTransparency = 1
+
+-- Close button
+local close = Instance.new("TextButton", title)
+close.Size = UDim2.new(0, 30, 0, 30)
+close.Position = UDim2.new(1, -30, 0, 0)
+close.Text = "X"
+close.Font = Enum.Font.GothamBold
+close.TextScaled = true
+close.TextColor3 = Color3.new(1,1,1)
+close.BackgroundColor3 = Color3.fromRGB(220,0,0)
+Instance.new("UICorner", close).CornerRadius = UDim.new(0, 10)
+
+-- Position label
+local posLabel = Instance.new("TextLabel", main)
+posLabel.Size = UDim2.new(1, -20, 0, 45)
+posLabel.Position = UDim2.new(0, 10, 0, 45)
+posLabel.Font = Enum.Font.Gotham
+posLabel.TextScaled = true
+posLabel.TextWrapped = true
+posLabel.TextColor3 = Color3.new(1,1,1)
+posLabel.BackgroundColor3 = Color3.fromRGB(40,40,40)
+Instance.new("UICorner", posLabel).CornerRadius = UDim.new(0, 12)
+
+-- Save button (Vàng)
+local save = Instance.new("TextButton", main)
+save.Size = UDim2.new(0.45, 0, 0, 35)
+save.Position = UDim2.new(0.05, 0, 1, -45)
+save.Text = "LƯU VỊ TRÍ"
+save.Font = Enum.Font.GothamBold
+save.TextScaled = true
+save.TextColor3 = Color3.new(0,0,0)
+save.BackgroundColor3 = Color3.fromRGB(255,200,40)
+Instance.new("UICorner", save).CornerRadius = UDim.new(0, 12)
+
+-- Start button (Xanh lá)
+local start = Instance.new("TextButton", main)
+start.Size = UDim2.new(0.45, 0, 0, 35)
+start.Position = UDim2.new(0.5, 0, 1, -45)
+start.Text = "START"
+start.Font = Enum.Font.GothamBold
+start.TextScaled = true
+start.TextColor3 = Color3.new(1,1,1)
+start.BackgroundColor3 = Color3.fromRGB(50,200,80)
+Instance.new("UICorner", start).CornerRadius = UDim.new(0, 12)
+
+-- Update position text
+RunService.RenderStepped:Connect(function()
+    if guiClosed then return end
+    local hrp = getHRP()
+    local p = hrp.Position
+    posLabel.Text = string.format("X: %.0f\nY: %.0f\nZ: %.0f", p.X, p.Y, p.Z)
+end)
+
+-- Save position
+save.MouseButton1Click:Connect(function()
+    savedCFrame = getHRP().CFrame
+end)
+
+-- Start / Stop TP
+start.MouseButton1Click:Connect(function()
+    if not savedCFrame then return end
+    running = not running
+    start.Text = running and "STOP" or "START"
+
+    if running then
+        tpThread = task.spawn(function()
+            while running and not guiClosed do
+                local hrp = getHRP()
+                hrp.CFrame = savedCFrame
+                task.wait(1)
+            end
+        end)
+    end
+end)
+
+-- Close GUI (STOP ALL)
+close.MouseButton1Click:Connect(function()
+    running = false
+    guiClosed = true
+    if tpThread then
+        task.cancel(tpThread)
+    end
+    gui:Destroy()
+end)
+
+-- Character respawn support
+player.CharacterAdded:Connect(function()
+    task.wait(0.2)
+    if running and savedCFrame and not guiClosed then
+        getHRP().CFrame = savedCFrame
+    end
+end)
