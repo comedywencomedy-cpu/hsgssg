@@ -1,0 +1,38 @@
+-- Services
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Đợi nhân vật load
+local function getCharacter()
+    return player.Character or player.CharacterAdded:Wait()
+end
+
+-- Đợi Obby tồn tại
+local function getObby()
+    return game.Workspace:WaitForChild("Map"):WaitForChild("GloveLocation"):WaitForChild("Winter"):WaitForChild("Jerry")
+end
+
+-- Teleport
+local function teleportToObby()
+    local char = getCharacter()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    local obby = getObby()
+
+    -- Nếu Obby là Model thì lấy PrimaryPart hoặc Part đầu tiên
+    local targetPart
+    if obby:IsA("Model") then
+        targetPart = obby.PrimaryPart or obby:FindFirstChildWhichIsA("BasePart")
+    elseif obby:IsA("BasePart") then
+        targetPart = obby
+    end
+
+    if targetPart then
+        hrp.CFrame = targetPart.CFrame + Vector3.new(0, 5, 0)
+        print("✅ Teleport thành công đến Obby")
+    else
+        warn("❌ Không tìm thấy Part để teleport")
+    end
+end
+
+-- Chạy
+teleportToObby()
