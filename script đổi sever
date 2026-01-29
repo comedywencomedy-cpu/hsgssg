@@ -1,0 +1,117 @@
+--// SERVICES
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+
+local player = Players.LocalPlayer
+local placeId = game.PlaceId
+
+--// GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ServerToolGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+
+--// MAIN FRAME
+local Frame = Instance.new("Frame")
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 260, 0, 200)
+Frame.AnchorPoint = Vector2.new(0.5, 0.5)
+Frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+Frame.ZIndex = 10
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 12)
+
+--// TITLE
+local Title = Instance.new("TextLabel")
+Title.Parent = Frame
+Title.Size = UDim2.new(1, -40, 0, 40)
+Title.Position = UDim2.new(0, 20, 0, 5)
+Title.BackgroundTransparency = 1
+Title.Text = "SERVER TOOL"
+Title.TextColor3 = Color3.new(1,1,1)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.ZIndex = 11
+
+--// CLOSE BUTTON
+local Close = Instance.new("TextButton")
+Close.Parent = Frame
+Close.Size = UDim2.new(0, 28, 0, 28)
+Close.Position = UDim2.new(1, -35, 0, 8)
+Close.Text = "X"
+Close.Font = Enum.Font.GothamBold
+Close.TextSize = 14
+Close.TextColor3 = Color3.new(1,1,1)
+Close.BackgroundColor3 = Color3.fromRGB(160, 60, 60)
+Close.ZIndex = 11
+Instance.new("UICorner", Close).CornerRadius = UDim.new(1,0)
+
+Close.MouseButton1Click:Connect(function()
+	ScreenGui:Destroy()
+end)
+
+--// TEST BUTTON
+local TestBtn = Instance.new("TextButton")
+TestBtn.Parent = Frame
+TestBtn.Size = UDim2.new(1, -40, 0, 40)
+TestBtn.Position = UDim2.new(0, 20, 0, 55)
+TestBtn.Text = "TEST NÚT (BẤM ĐI)"
+TestBtn.Font = Enum.Font.GothamBold
+TestBtn.TextSize = 14
+TestBtn.TextColor3 = Color3.new(1,1,1)
+TestBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+TestBtn.ZIndex = 11
+Instance.new("UICorner", TestBtn).CornerRadius = UDim.new(0, 8)
+
+TestBtn.MouseButton1Click:Connect(function()
+	TestBtn.Text = "TEST OK ✅"
+	TestBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+	print("TEST BUTTON WORKS")
+end)
+
+--// HOP BUTTON
+local HopBtn = Instance.new("TextButton")
+HopBtn.Parent = Frame
+HopBtn.Size = UDim2.new(1, -40, 0, 40)
+HopBtn.Position = UDim2.new(0, 20, 0, 105)
+HopBtn.Text = "ĐỔI SERVER"
+HopBtn.Font = Enum.Font.GothamBold
+HopBtn.TextSize = 14
+HopBtn.TextColor3 = Color3.new(1,1,1)
+HopBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+HopBtn.ZIndex = 11
+Instance.new("UICorner", HopBtn).CornerRadius = UDim.new(0, 8)
+
+--// SERVER HOP FUNCTION
+local function ServerHop()
+	local url = "https://games.roblox.com/v1/games/"..placeId.."/servers/Public?limit=100"
+	local success, result = pcall(function()
+		return game:HttpGet(url)
+	end)
+
+	if not success then
+		warn("Không lấy được server")
+		return
+	end
+
+	local data = HttpService:JSONDecode(result)
+	for _, server in pairs(data.data) do
+		if server.playing < server.maxPlayers then
+			TeleportService:TeleportToPlaceInstance(placeId, server.id, player)
+			return
+		end
+	end
+
+	warn("Không có server trống")
+end
+
+HopBtn.MouseButton1Click:Connect(ServerHop)
+
+print("SERVER TOOL LOADED")
