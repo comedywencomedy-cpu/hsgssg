@@ -1,0 +1,156 @@
+--// ULTIMATE CONSOLE v2
+
+local Players = game:GetService("Players")
+local LogService = game:GetService("LogService")
+
+local player = Players.LocalPlayer
+
+--===== GUI =====--
+local gui = Instance.new("ScreenGui")
+gui.Name = "UltimateConsole"
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0.8,0,0.8,0)
+main.Position = UDim2.new(0.1,0,0.1,0)
+main.BackgroundColor3 = Color3.fromRGB(18,18,18)
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,15)
+
+-- TITLE
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1,0,0,40)
+title.BackgroundTransparency = 1
+title.Text = "ULTIMATE CONSOLE"
+title.TextColor3 = Color3.fromRGB(0,255,150)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 22
+
+-- CLOSE BUTTON
+local close = Instance.new("TextButton", main)
+close.Size = UDim2.new(0,40,0,30)
+close.Position = UDim2.new(1,-50,0,5)
+close.Text = "X"
+close.BackgroundColor3 = Color3.fromRGB(50,0,0)
+close.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", close).CornerRadius = UDim.new(0,8)
+
+close.MouseButton1Click:Connect(function()
+	gui:Destroy()
+end)
+
+-- CLEAR BUTTON
+local clear = Instance.new("TextButton", main)
+clear.Size = UDim2.new(0,70,0,30)
+clear.Position = UDim2.new(1,-130,0,5)
+clear.Text = "Clear"
+clear.BackgroundColor3 = Color3.fromRGB(40,40,40)
+clear.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", clear).CornerRadius = UDim.new(0,8)
+
+-- SCROLL
+local scroll = Instance.new("ScrollingFrame", main)
+scroll.Position = UDim2.new(0,10,0,50)
+scroll.Size = UDim2.new(1,-20,1,-60)
+scroll.CanvasSize = UDim2.new(0,0,0,0)
+scroll.ScrollBarImageColor3 = Color3.fromRGB(0,255,150)
+scroll.BackgroundTransparency = 1
+scroll.BorderSizePixel = 0
+
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0,6)
+
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+	scroll.CanvasPosition = Vector2.new(0, layout.AbsoluteContentSize.Y)
+end)
+
+clear.MouseButton1Click:Connect(function()
+	for _,v in pairs(scroll:GetChildren()) do
+		if v:IsA("TextLabel") then
+			v:Destroy()
+		end
+	end
+end)
+
+--===== ERROR EXPLAIN SYSTEM =====--
+local function ExplainError(msg)
+
+	msg = string.lower(msg)
+
+	if string.find(msg, "expected identifier") then
+		return "→ Tên biến sai. Biến phải bắt đầu bằng chữ hoặc _. Không được bắt đầu bằng số."
+
+	elseif string.find(msg, "unexpected symbol") then
+		return "→ Có ký tự không hợp lệ. Kiểm tra lại dấu = , ( ) hoặc ký tự đặc biệt."
+
+	elseif string.find(msg, "attempt to index nil") then
+		return "→ Bạn đang truy cập một biến chưa tồn tại (nil). Có thể biến chưa được tạo."
+
+	elseif string.find(msg, "attempt to call nil") then
+		return "→ Đang gọi một biến như function nhưng nó là nil."
+
+	elseif string.find(msg, "missing") then
+		return "→ Thiếu từ khóa như end, then, do hoặc thiếu dấu đóng."
+
+	elseif string.find(msg, "expected") then
+		return "→ Sai cú pháp. Có thể thiếu dấu = hoặc đặt sai cấu trúc lệnh."
+
+	elseif string.find(msg, "number expected") then
+		return "→ Lệnh yêu cầu số nhưng bạn truyền vào giá trị khác."
+
+	elseif string.find(msg, "string expected") then
+		return "→ Lệnh yêu cầu chuỗi (text) nhưng bạn truyền sai kiểu dữ liệu."
+
+	else
+		return "→ Lỗi cú pháp hoặc logic trong script. Kiểm tra lại đoạn code gần đó."
+	end
+end
+
+--===== ADD LOG =====--
+local function AddLog(text, color, explanation)
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1,-5,0,24)
+	label.BackgroundTransparency = 1
+	label.TextWrapped = true
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Font = Enum.Font.Code
+	label.TextSize = 15
+	label.Text = text
+	label.TextColor3 = color
+	label.Parent = scroll
+
+	if explanation then
+		local explainLabel = Instance.new("TextLabel")
+		explainLabel.Size = UDim2.new(1,-15,0,40)
+		explainLabel.BackgroundTransparency = 1
+		explainLabel.TextWrapped = true
+		explainLabel.TextXAlignment = Enum.TextXAlignment.Left
+		explainLabel.Font = Enum.Font.Gotham
+		explainLabel.TextSize = 14
+		explainLabel.Text = explanation
+		explainLabel.TextColor3 = Color3.fromRGB(255,120,120)
+		explainLabel.Parent = scroll
+	end
+end
+
+--===== CAPTURE LOGS =====--
+LogService.MessageOut:Connect(function(message, messageType)
+
+	if messageType == Enum.MessageType.MessageOutput then
+		AddLog(message, Color3.fromRGB(255,255,255))
+
+	elseif messageType == Enum.MessageType.MessageWarning then
+		AddLog(message, Color3.fromRGB(255,200,0))
+
+	elseif messageType == Enum.MessageType.MessageError then
+		local explain = ExplainError(message)
+		AddLog(message, Color3.fromRGB(255,60,60), explain)
+	end
+
+end)
+
+print("Console Loaded")
