@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sey Bell Spam</title>
+    <style>
+        body {
+            margin: 0;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #text {
+            color: white;
+            font-size: 20px;
+            font-family: Arial, sans-serif;
+            display: none;
+        }
+
+        .run {
+            display: block !important;
+            animation: zoom 0.4s infinite alternate;
+        }
+
+        @keyframes zoom {
+            0% {
+                transform: scale(0.5);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(4);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="text">sey bell</div>
+
+    <script>
+        // Biến điều khiển
+        var cochay = false;
+
+        const text = document.getElementById("text");
+
+        function startSpam() {
+            if (cochay) {
+                text.classList.add("run");
+
+                setInterval(() => {
+                    if (cochay) {
+                        text.style.visibility = "hidden";
+                        setTimeout(() => {
+                            if (cochay) text.style.visibility = "visible";
+                        }, 50);
+                    }
+                }, 400);
+            }
+        }
+
+        startSpam();
+    </script>
+</body>
+</html>
